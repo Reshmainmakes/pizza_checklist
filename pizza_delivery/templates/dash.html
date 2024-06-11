@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Dashboard</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        table, th, td {
+            border: 1px solid black;
+        }
+        th, td {
+            padding: 10px;
+            text-align: center;
+        }
+        .dashboard {
+            margin-top: 20px;
+        }
+        #download-pdf-btn {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>Task Completion Table</h1>
+    <label for="date-picker">Select Date: </label>
+    <input type="date" id="date-picker">
+    <button onclick="addDateColumn()">Add Date</button>
+
+    <table id="task-table">
+        <thead>
+            <tr>
+                <th>Task</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Make Juice</td>
+            </tr>
+            <tr>
+                <td>Make Pizza</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>Dashboard</h2>
+    <div class="dashboard">
+        <table id="dashboard-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>All Tasks Completed</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Dashboard rows will be added here dynamically -->
+            </tbody>
+        </table>
+    </div>
+
+    <button id="download-pdf-btn">Download PDF</button>
+
+    <!-- Include html2canvas and jsPDF libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/0.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+
+    <script>
+        // Array to store dashboard data
+        let dashboardData = [];
+
+        function addDateColumn() {
+            const datePicker = document.getElementById('date-picker');
+            const selectedDate = datePicker.value;
+
+            if (!selectedDate) {
+                alert('Please select a date.');
+                return;
+            }
+
+            const table = document.getElementById('task-table');
+            const headerRow = table.querySelector('thead tr');
+            const newHeader = document.createElement('th');
+            newHeader.textContent = selectedDate;
+
+            // Insert the new date header cell after the task header cell
+            headerRow.insertBefore(newHeader, headerRow.children[1]);
+
+            const taskRows = table.querySelectorAll('tbody tr');
+            taskRows.forEach(row => {
+                const newCell = document.createElement('td');
+                newCell.innerHTML = `<input type="checkbox" class="task-checkbox" onchange="updateDashboard()">`;
+                // Insert the new cell at the same position as the header
+                row.insertBefore(newCell, row.children[1]);
+            });
+
+            updateDashboard(); // Update the dashboard whenever a new date is added
+        }
+
+        function updateDashboard() {
+            const table = document.getElementById('task-table');
+            const headerCells = table.querySelectorAll('thead th:not(:first-child)');
+            const dates = Array.from(headerCells).map(cell => cell.textContent);
+
+            const dashboardTable = document.getElementById('dashboard-table');
+            const dashboardBody = dashboardTable.querySelector('tbody');
+            dashboardBody.innerHTML = ''; // Clear previous dashboard rows
+
+            dashboardData = []; // Clear existing data
+
+            dates.forEach((date, index) => {
+                const taskCells = table.querySelectorAll(`tbody tr td:nth-child(${index + 2}) input`);
+                const allCompleted = Array.from(taskCells).every(checkbox => checkbox.checked);
+
+                const newRow = document.createElement('tr');
+                const dateCell = document.createElement('td');
+                const statusCell = document.createElement('td');
+                dateCell.textContent = date;
+                statusCell.textContent = allCompleted ? 'Yes' : 'No';
+
+                newRow.appendChild(dateCell);
+                newRow.appendChild(statusCell);
+                dashboardBody.appendChild(newRow);
+
+                // Store data in the dashboardData array
+                dashboardData.push({ date: date, allCompleted: allCompleted });
+            });
+
+            // Save the dashboard data to local storage
+            localStorage.setItem('dashboardData', JSON.stringify(dashboardData));
+        }
+
+        document.getElementById('download-pdf-btn').addEventListener('click', function() {
+            saveTableAsPDF();
+        });
+
+        function saveTableAsPDF() {
+            const dashboardTable = document.getElementById('dashboard-table');
+            html2canvas(dashboardTable).then(canvas => {
+                const imgData = canvas.toDataURL('image/png');
+                const doc = new jsPDF();
+
+                const imgWidth = 190;
+                const imgHeight = canvas.height * imgWidth / canvas.width;
+
+                doc.addImage(imgData, 'PNG', 10, 10, imgWidth, imgHeight);
+                doc.save('dashboard.pdf');
+            });
+        }
+
+        // Load dashboard data from local storage on page load
+        window.addEventListener('load', () => {
+            const storedData = JSON.parse(localStorage.getItem('dashboardData'));
+            if (storedData) {
+                dashboardData = storedData;
+
+                const dashboardTable = document.getElementById('dashboard-table');
+                const dashboardBody = dashboardTable.querySelector('tbody');
+                dashboardBody.innerHTML = ''; // Clear previous dashboard rows
+
+                dashboardData.forEach(data => {
+                    const newRow = document.createElement('tr');
+                    const dateCell = document.createElement('td');
+                    const statusCell = document.createElement('td');
+                    dateCell.textContent = data.date;
+                    statusCell.textContent = data.allCompleted ? 'Yes' : 'No';
+
+                    newRow.appendChild(dateCell);
+                    newRow.appendChild(statusCell);
+                    dashboardBody.appendChild(newRow);
+                });
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Driver Tasks</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        label {
+            font-size: 16px;
+            margin-right: 10px;
+        }
+
+        input[type="date"] {
+            padding: 5px;
+            font-size: 16px;
+            margin-right: 10px;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        table {
+            width: 100%;
+            max-width: 800px;
+            margin-top: 20px;
+            border-collapse: collapse;
+            background: #fff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: center;
+            border: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #007bff;
+            color: white;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        tr:hover {
+            background-color: #e9e9e9;
+        }
+
+        .button {
+            margin-top: 20px;
+            background-color: #28a745;
+        }
+
+        .button:hover {
+            background-color: #218838;
+        }
+    </style>
+</head>
+<body>
+    <h1>Driver Tasks</h1>
+    <label for="date">Pick a date:</label>
+    <input type="date" id="date">
+    <button onclick="addDate()">Add Date</button><br><br>
+
+    <table id="taskTable">
+        <thead>
+            <tr>
+                <th>Task</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Deliver Orders</td>
+            </tr>
+            <tr>
+                <td>Check Vehicle</td>
+            </tr>
+        </tbody>
+    </table>
+    <form id="dashboard-form" action="{% url 'dashboard' %}" method="GET" onsubmit="return validateTasksCompletion()">
+        <button type="submit" class="button">Go to Dashboard</button>
+    </form>
+
+    <script>
+        function addDate() {
+            var date = document.getElementById('date').value;
+            if (!date) return;
+
+            var table = document.getElementById('taskTable');
+            var headRow = table.tHead.rows[0];
+            var newHeadCell = document.createElement('th');
+            newHeadCell.textContent = date;
+            headRow.appendChild(newHeadCell);
+
+            var rows = table.tBodies[0].rows;
+            for (var i = 0; i < rows.length; i++) {
+                var newCell = document.createElement('td');
+                var checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                newCell.appendChild(checkbox);
+                rows[i].appendChild(newCell);
+            }
+        }
+
+        function validateTasksCompletion() {
+            var checkboxes = document.querySelectorAll('#taskTable input[type="checkbox"]');
+            for (var checkbox of checkboxes) {
+                if (!checkbox.checked) {
+                    alert('Please complete all tasks before proceeding to Dashboard.');
+                    return false;
+                }
+            }
+            return true;
+        }
+    </script>
+</body>
+</html>
